@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Purificación de aire</title>
+<style>
+  :root{--tinta:#1d2b2a;--fondo:#f3f6f5;--linea:#d5dedc;--verde:#0f766e;--antes:#b45309;--blanco:#fff}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;font-family:Verdana,Geneva,sans-serif;font-size:14px;background:var(--fondo);color:var(--tinta)}
+  header{background:var(--tinta);color:#fff;padding:14px 24px}
+  header h1{margin:0;font-size:20px}
+  header p{margin:2px 0 0;font-size:12px;opacity:.75}
+  nav{background:var(--blanco);border-bottom:1px solid var(--linea);padding:0 16px;display:flex;flex-wrap:wrap}
+  nav button{border:0;background:none;padding:12px 16px;font:inherit;cursor:pointer;color:var(--tinta);border-bottom:3px solid transparent}
+  nav button.on{border-bottom-color:var(--verde);font-weight:bold;color:var(--verde)}
+  nav button:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
+  main{max-width:1100px;margin:0 auto;padding:18px}
+  h2{margin:0 0 4px;font-size:18px}
+  h3{margin:0 0 8px;font-size:14px}
+  .sub{margin:0 0 14px;color:#51615f}
+  .card{background:var(--blanco);border:1px solid var(--linea);border-radius:6px;padding:14px;margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+  .kpi{background:var(--blanco);border:1px solid var(--linea);border-top:4px solid var(--verde);border-radius:6px;padding:10px 12px}
+  .kt{font-size:12px;color:#51615f}
+  .kv{font-size:20px;font-weight:bold;margin:4px 0}
+  .ks{font-size:11px;color:#51615f}
+  label{display:block;font-size:12px;margin-bottom:3px;color:#51615f}
+  input,select{font:inherit;padding:7px;border:1px solid #aab8b5;border-radius:4px;width:100%;background:#fff}
+  .campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+  button.b{font:inherit;padding:8px 14px;border:1px solid var(--verde);background:var(--verde);color:#fff;border-radius:4px;cursor:pointer}
+  button.b.sec{background:#fff;color:var(--verde)}
+  button.b:disabled{opacity:.5;cursor:default}
+  button.mini{font:inherit;font-size:11px;padding:2px 6px;border:1px solid #aab8b5;background:#fff;border-radius:3px;cursor:pointer}
+  .fila{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{border-bottom:1px solid var(--linea);padding:6px 8px;text-align:left}
+  th{background:#eaf0ee;font-weight:bold}
+  .scroll{max-height:280px;overflow:auto}
+  .tabla-x{overflow-x:auto}
+  .badge{display:inline-block;color:#fff;border-radius:10px;padding:2px 9px;font-size:12px}
+  .msg{margin-top:8px;font-size:13px}
+  .msg.ok{color:#166534}.msg.err{color:#b91c1c}
+  .chart{width:100%;height:auto;display:block}
+  .leyenda{font-size:12px;display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}
+  .leyenda i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px}
+  .alerta{border-left:5px solid;padding:7px 10px;margin-bottom:6px;background:#fff;font-size:13px}
+  #aviso{background:#fef2f2;color:#991b1b;padding:8px 24px;font-size:13px;cursor:pointer;border-bottom:1px solid #fecaca}
+  .barra{height:14px;background:#dfe8e6;border-radius:7px;overflow:hidden;margin:8px 0 4px}
+  .barra div{height:100%;width:0;background:var(--verde)}
+  .res{font-size:15px;margin:6px 0 12px}
+  @media print{header p,nav,#aviso,button,.noimp{display:none!important}section{display:block!important}#dashboard,#monitoreo,#purificacion,#validacion{display:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Sistema de purificación de aire</h1>
+  <p>Medición, filtración simulada, validación e indicadores</p>
+</header>
+<div id="aviso" hidden onclick="ir('dashboard')"></div>
+<nav>
+  <button data-t="monitoreo" onclick="ir('monitoreo')">1. Monitoreo</button>
+  <button data-t="purificacion" onclick="ir('purificacion')">2. Purificación</button>
+  <button data-t="validacion" onclick="ir('validacion')">3. Validación</button>
+  <button data-t="dashboard" onclick="ir('dashboard')">4. Dashboard</button>
+  <button data-t="reportes" onclick="ir('reportes')">Reportes</button>
+</nav>
+
+<main>
+<!-- ============ MÓDULO 1 ============ -->
+<section id="monitoreo">
+  <h2>Monitoreo del aire contaminado</h2>
+  <p class="sub">Registre la medición de los sensores al ingresar el aire. La fecha y la hora se guardan automáticamente.</p>
+  <div class="card">
+    <div class="campos">
+      <div><label for="pm25">PM2.5 (µg/m³)</label><input id="pm25" type="number" min="0" step="0.1"></div>
+      <div><label for="pm10">PM10 (µg/m³)</label><input id="pm10" type="number" min="0" step="0.1"></div>
+      <div><label for="co2">CO₂ (ppm)</label><input id="co2" type="number" min="0" step="1"></div>
+      <div><label for="co">CO (ppm)</label><input id="co" type="number" min="0" step="0.1"></div>
+    </div>
+    <div class="fila">
+      <button class="b" onclick="registrar()">Registrar ingreso</button>
+      <button class="b sec" onclick="simular()">Simular sensores</button>
+      <button class="b sec" onclick="demo()">Cargar datos de ejemplo</button>
+    </div>
+    <div id="m1" class="msg"></div>
+  </div>
+  <div class="card tabla-x">
+    <h3>Ingresos registrados</h3>
+    <table>
+      <thead><tr><th>#</th><th>Fecha y hora</th><th>PM2.5</th><th>PM10</th><th>CO₂</th><th>CO</th><th>Nivel</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="tMed"></tbody>
+    </table>
+    <p class="ks" style="font-size:12px;color:#51615f">Nivel = el más alto entre los cuatro contaminantes (Bajo, Moderado, Alto, Crítico).</p>
+  </div>
+</section>
+
+<!-- ============ MÓDULO 2 ============ -->
+<section id="purificacion" hidden>
+  <h2>Proceso de descontaminación</h2>
+  <p class="sub">Elija un ingreso pendiente, seleccione el filtro y el tiempo de funcionamiento.</p>
+  <div class="card">
+    <label for="selPur">Ingreso pendiente</label>
+    <select id="selPur" onchange="detallePur()"></select>
+    <div id="detPur" style="margin-top:12px"></div>
+    <div id="formPur" hidden>
+      <div class="campos" style="margin-top:12px">
+        <div>
+          <label for="filtro">Tipo de filtro (recomendado: <b id="recom"></b>)</label>
+          <select id="filtro">
+            <option>HEPA</option>
+            <option>Carbón activado</option>
+            <option>HEPA + Carbón activado</option>
+            <option>Sistema completo</option>
+          </select>
+        </div>
+        <div><label for="minutos">Tiempo de funcionamiento (min)</label><input id="minutos" type="number" min="1" max="180" value="10"></div>
+      </div>
+      <button class="b" id="btnAct" onclick="activar()">Activar sistema de filtración</button>
+      <div id="prog" hidden><div class="barra"><div id="barra"></div></div><div id="estadoPur" class="ks"></div></div>
+      <p class="ks" style="font-size:12px;color:#51615f;margin-top:10px">
+        HEPA retiene partículas (PM2.5 y PM10). El carbón activado adsorbe algunos gases.
+        Para bajar CO y CO₂ se necesita además un catalizador/absorbente (Sistema completo).
+        Ninguna tecnología sirve para todo.
+      </p>
+    </div>
+    <div id="m2" class="msg"></div>
+  </div>
+  <div id="logPur"></div>
+</section>
+
+<!-- ============ MÓDULO 3 ============ -->
+<section id="validacion" hidden>
+  <h2>Validación del aire purificado</h2>
+  <p class="sub">Medición final, comparación con la inicial y clasificación del tratamiento.</p>
+  <div class="card">
+    <label for="selVal">Proceso purificado</label>
+    <select id="selVal" onchange="validacion()"></select>
+  </div>
+  <div id="detVal"></div>
+</section>
+
+<!-- ============ MÓDULO 4 ============ -->
+<section id="dashboard" hidden>
+  <h2>Dashboard de calidad del aire</h2>
+  <p class="sub">Promedios de todos los procesos purificados.</p>
+  <div id="kpis" class="kpis"></div>
+  <div class="grid" id="graficos"></div>
+  <div class="card">
+    <h3>Alertas por niveles de contaminación</h3>
+    <div id="alertas"></div>
+  </div>
+</section>
+
+<section id="reportes" hidden>
+  <h2>Reportes para la toma de decisiones</h2>
+  <div class="fila noimp" style="margin:8px 0 14px">
+    <button class="b" onclick="location='/api/reporte.csv'">Descargar CSV (Excel)</button>
+    <button class="b sec" onclick="window.print()">Imprimir / guardar PDF</button>
+  </div>
+  <div class="card"><h3>Análisis de resultados</h3><div id="analisis"></div></div>
+  <div class="card tabla-x"><h3>Eficiencia por tipo de filtro</h3><table id="tFiltro"></table></div>
+  <div class="card tabla-x"><h3>Detalle de procesos</h3><table id="tRep"></table></div>
+</section>
+</main>
+
+<script>
+const CONT = ["pm25", "pm10", "co2", "co"];
+const NOM = {pm25: "PM2.5", pm10: "PM10", co2: "CO₂", co: "CO"};
+const UN = {pm25: "µg/m³", pm10: "µg/m³", co2: "ppm", co: "ppm"};
+const COL = {pm25: "#b45309", pm10: "#7c3aed", co2: "#0f766e", co: "#be123c"};
+const COLOR_NIVEL = {"Bajo": "#2e8b3d", "Moderado": "#a16207", "Alto": "#d9631b", "Crítico": "#b91c1c"};
+const COLOR_RES = {"Excelente": "#2e8b3d", "Bueno": "#0f766e", "Regular": "#a16207", "Deficiente": "#b91c1c"};
+let P = [];
+
+const $ = id => document.getElementById(id);
+const prom = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+const f1 = x => (Math.round(x * 10) / 10).toLocaleString("es-CO");
+const badge = (t, c) => `<span class="badge" style="background:${c}">${t}</span>`;
+const nb = n => badge(n, COLOR_NIVEL[n]);
+
+async function api(url, metodo, cuerpo) {
+  const r = await fetch(url, {method: metodo || "GET", headers: {"Content-Type": "application/json"},
+    body: cuerpo ? JSON.stringify(cuerpo) : undefined});
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || "Error");
+  return d;
+}
+function msg(id, t, err) { const e = $(id); e.textContent = t; e.className = "msg " + (err ? "err" : "ok"); }
+function ir(id) {
+  document.querySelectorAll("section").forEach(s => s.hidden = s.id !== id);
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t === id));
+}
+
+/* ---------------- gráficos SVG hechos a mano ---------------- */
+function leyenda(items) {
+  return `<div class="leyenda">${items.map(i => `<span><i style="background:${i[1]}"></i>${i[0]}</span>`).join("")}</div>`;
+}
+function barras(cats, series, maxFijo) {
+  const W = 560, H = 250, m = {l: 44, r: 8, t: 10, b: 30};
+  const max = maxFijo || Math.max(1, ...series.flatMap(s => s.valores)) * 1.1;
+  const gw = (W - m.l - m.r) / Math.max(1, cats.length);
+  const bw = Math.min(30, gw / (series.length + 1));
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img">`;
+  for (let i = 0; i <= 4; i++) {
+    const y = m.t + (H - m.t - m.b) * (1 - i / 4);
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y}" y2="${y}" stroke="#d5dedc"/>` +
+         `<text x="${m.l - 5}" y="${y + 4}" text-anchor="end" font-size="10" fill="#51615f">${Math.round(max * i / 4)}</text>`;
+  }
+  cats.forEach((c, i) => {
+    series.forEach((se, j) => {
+      const v = se.valores[i], h = (H - m.t - m.b) * v / max;
+      const x = m.l + gw * i + (gw - bw * series.length) / 2 + bw * j;
+      s += `<rect x="${x}" y="${H - m.b - h}" width="${bw}" height="${h}" fill="${se.color}"><title>${se.nombre}: ${v}</title></rect>`;
+    });
+    s += `<text x="${m.l + gw * i + gw / 2}" y="${H - m.b + 15}" text-anchor="middle" font-size="10" fill="#51615f">${c}</text>`;
+  });
+  return s + "</svg>" + (series.length > 1 ? leyenda(series.map(x => [x.nombre, x.color])) : "");
+}
+function lineas(lect, p) {
+  const W = 560, H = 250, m = {l: 44, r: 8, t: 10, b: 28};
+  const T = Math.max(1, lect[lect.length - 1].minuto);
+  const X = t => m.l + (W - m.l - m.r) * t / T;
+  const Y = v => m.t + (H - m.t - m.b) * (1 - v / 100);
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img">`;
+  for (let i = 0; i <= 4; i++) {
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(25 * i)}" y2="${Y(25 * i)}" stroke="#d5dedc"/>` +
+         `<text x="${m.l - 5}" y="${Y(25 * i) + 4}" text-anchor="end" font-size="10" fill="#51615f">${25 * i}%</text>`;
+  }
+  [0, T / 2, T].forEach(t => s += `<text x="${X(t)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#51615f">${Math.round(t)} min</text>`);
+  CONT.forEach(c => {
+    const pts = lect.map(l => X(l.minuto) + "," + Y(p[c + "_in"] > 0 ? Math.min(100, l[c] / p[c + "_in"] * 100) : 100)).join(" ");
+    s += `<polyline points="${pts}" fill="none" stroke="${COL[c]}" stroke-width="2"/>`;
+  });
+  return s + "</svg>" + leyenda(CONT.map(c => [NOM[c], COL[c]]));
+}
+
+/* ---------------- Módulo 1 ---------------- */
+function simular() {
+  const pm25 = +(5 + Math.random() * 195).toFixed(1);
+  $("pm25").value = pm25;
+  $("pm10").value = +(pm25 * (1.3 + Math.random() * 0.9)).toFixed(1);
+  $("co2").value = Math.round(450 + Math.random() * 2500);
+  $("co").value = +(1 + Math.random() * 50).toFixed(1);
+}
+async function registrar() {
+  try {
+    const d = {};
+    CONT.forEach(c => d[c] = $(c).value);
+    if (CONT.some(c => d[c] === "")) throw new Error("Complete los cuatro valores o use «Simular sensores».");
+    const r = await api("/api/procesos", "POST", d);
+    msg("m1", `Ingreso #${r.id} registrado el ${r.fecha_ingreso}. Nivel: ${r.nivel_in}.`);
+    CONT.forEach(c => $(c).value = "");
+    await cargar();
+  } catch (e) { msg("m1", e.message, true); }
+}
+async function demo() { await api("/api/demo", "POST"); msg("m1", "Datos de ejemplo cargados."); await cargar(); }
+async function borrar(id) {
+  if (confirm("¿Eliminar el proceso #" + id + "?")) { await api("/api/procesos/" + id, "DELETE"); await cargar(); }
+}
+function tablaMediciones() {
+  const filas = [...P].reverse().map(p => `<tr><td>${p.id}</td><td>${p.fecha_ingreso}</td><td>${p.pm25_in}</td><td>${p.pm10_in}</td>` +
+    `<td>${p.co2_in}</td><td>${p.co_in}</td><td>${nb(p.nivel_in)}</td><td>${p.estado}</td>` +
+    `<td><button class="mini" onclick="borrar(${p.id})">Eliminar</button></td></tr>`).join("");
+  $("tMed").innerHTML = filas || `<tr><td colspan="9">Sin registros. Registre un ingreso o cargue datos de ejemplo.</td></tr>`;
+}
+
+/* ---------------- Módulo 2 ---------------- */
+function llenarSelect(id, lista, texto) {
+  const sel = $(id), actual = sel.value;
+  sel.innerHTML = lista.map(p => `<option value="${p.id}">${texto(p)}</option>`).join("");
+  if (lista.some(p => String(p.id) === actual)) sel.value = actual;
+}
+function selectores() {
+  const pend = P.filter(p => p.estado === "Pendiente");
+  llenarSelect("selPur", pend, p => `#${p.id} – ${p.fecha_ingreso} – nivel ${p.nivel_in}`);
+  const ok = P.filter(p => p.estado === "Purificado").reverse();
+  llenarSelect("selVal", ok, p => `#${p.id} – ${p.fecha_ingreso} – ${p.filtro}`);
+  detallePur();
+}
+function detallePur() {
+  const p = P.find(x => String(x.id) === $("selPur").value);
+  if (!p) {
+    $("detPur").innerHTML = "<p>No hay ingresos pendientes. Registre uno en Monitoreo.</p>";
+    $("formPur").hidden = true;
+    return;
+  }
+  $("formPur").hidden = false;
+  $("detPur").innerHTML = `<table><thead><tr><th>Contaminante</th><th>Valor medido</th><th>Nivel</th></tr></thead><tbody>` +
+    CONT.map(c => `<tr><td>${NOM[c]}</td><td>${p[c + "_in"]} ${UN[c]}</td><td>${nb(p.niveles_in[c])}</td></tr>`).join("") + `</tbody></table>`;
+  $("recom").textContent = p.recomendado;
+  $("filtro").value = p.recomendado;
+}
+function logHTML(d) {
+  return `<div class="card"><h3>Registro de valores durante el proceso (#${d.id}, ${d.filtro}, ${d.minutos} min)</h3>` +
+    `<div class="scroll"><table><thead><tr><th>Minuto</th><th>PM2.5</th><th>PM10</th><th>CO₂</th><th>CO</th></tr></thead><tbody>` +
+    d.lecturas.map(l => `<tr><td>${l.minuto}</td><td>${l.pm25}</td><td>${l.pm10}</td><td>${l.co2}</td><td>${l.co}</td></tr>`).join("") +
+    `</tbody></table></div></div>`;
+}
+async function activar() {
+  const id = +$("selPur").value, filtro = $("filtro").value, minutos = +$("minutos").value;
+  $("btnAct").disabled = true;
+  $("prog").hidden = false;
+  let w = 0;
+  await new Promise(fin => {
+    const t = setInterval(() => {
+      w += 5;
+      $("barra").style.width = w + "%";
+      $("estadoPur").textContent = `Filtrando con ${filtro}… ${w}%`;
+      if (w >= 100) { clearInterval(t); fin(); }
+    }, 70);
+  });
+  try {
+    const d = await api(`/api/procesos/${id}/purificar`, "POST", {filtro, minutos});
+    msg("m2", `Proceso #${id} terminado: ${d.clasificacion} (${d.eficiencia} % de eficiencia).`);
+    $("logPur").innerHTML = logHTML(d) +
+      `<button class="b" onclick="$('selVal').value=${id};validacion();ir('validacion')">Ver validación</button>`;
+    await cargar();
+  } catch (e) { msg("m2", e.message, true); }
+  $("btnAct").disabled = false;
+  $("prog").hidden = true;
+  $("barra").style.width = "0";
+}
+
+/* ---------------- Módulo 3 ---------------- */
+async function validacion() {
+  const id = $("selVal").value;
+  if (!id) { $("detVal").innerHTML = `<div class="card">Aún no hay procesos purificados.</div>`; return; }
+  const d = await api("/api/procesos/" + id);
+  const filas = CONT.map(c => `<tr><td>${NOM[c]}</td><td>${d[c + "_in"]} ${UN[c]}</td><td>${d[c + "_out"]} ${UN[c]}</td>` +
+    `<td><b>${f1(d.reduccion[c])} %</b></td><td>${nb(d.niveles_in[c])} → ${nb(d.niveles_out[c])}</td></tr>`).join("");
+  $("detVal").innerHTML =
+    `<div class="card"><div class="res">Resultado del tratamiento: ${badge(d.clasificacion, COLOR_RES[d.clasificacion])} ` +
+    `&nbsp; Eficiencia: <b>${f1(d.eficiencia)} %</b> &nbsp; Aire final: ${nb(d.nivel_out)} &nbsp; Duración: <b>${d.minutos} min</b> &nbsp; Filtro: <b>${d.filtro}</b></div>` +
+    `<div class="tabla-x"><table><thead><tr><th>Contaminante</th><th>Inicial</th><th>Final</th><th>Reducción</th><th>Nivel</th></tr></thead><tbody>${filas}</tbody></table></div>` +
+    `<p class="ks" style="font-size:12px;color:#51615f">Excelente ≥ 90 % · Bueno ≥ 70 % · Regular ≥ 40 % · Deficiente &lt; 40 %. ` +
+    `La eficiencia es el promedio de reducción de los contaminantes que estaban por encima del nivel Bajo.</p></div>` +
+    `<div class="card"><h3>Evolución durante el proceso (% del valor inicial)</h3>${lineas(d.lecturas, d)}</div>` + logHTML(d);
+}
+
+/* ---------------- Módulo 4: dashboard ---------------- */
+function alertas() {
+  const L = [];
+  P.forEach(p => {
+    if (p.estado === "Pendiente" && ["Alto", "Crítico"].includes(p.nivel_in))
+      L.push({t: `Ingreso #${p.id} con nivel ${p.nivel_in} sin tratar.`, c: p.nivel_in});
+    if (p.estado === "Purificado" && ["Alto", "Crítico"].includes(p.nivel_out))
+      L.push({t: `Proceso #${p.id}: el aire tratado sigue en nivel ${p.nivel_out} (filtro ${p.filtro}).`, c: p.nivel_out});
+    if (p.clasificacion === "Deficiente")
+      L.push({t: `Proceso #${p.id}: resultado Deficiente (${f1(p.eficiencia)} % de eficiencia con ${p.filtro}).`, c: "Alto"});
+  });
+  return L;
+}
+async function dashboard() {
+  const ok = P.filter(p => p.estado === "Purificado");
+  const A = alertas();
+  $("alertas").innerHTML = A.length
+    ? A.map(a => `<div class="alerta" style="border-color:${COLOR_NIVEL[a.c]}">${a.t}</div>`).join("")
+    : "Sin alertas activas.";
+  if (!ok.length) {
+    $("kpis").innerHTML = `<div class="card" style="grid-column:1/-1">Aún no hay procesos purificados. Cargue datos de ejemplo en Monitoreo o complete un proceso.</div>`;
+    $("graficos").innerHTML = "";
+    return;
+  }
+  const pr = k => prom(ok.map(p => p[k]));
+  const rc = c => prom(ok.map(p => p.reduccion[c]));
+  const kpi = (t, v, s, c) => `<div class="kpi" style="border-top-color:${c}"><div class="kt">${t}</div><div class="kv">${v}</div><div class="ks">${s}</div></div>`;
+  $("kpis").innerHTML =
+    kpi("PM2.5 (µg/m³)", `${f1(pr("pm25_in"))} → ${f1(pr("pm25_out"))}`, "Promedio antes → después", COL.pm25) +
+    kpi("CO₂ (ppm)", `${f1(pr("co2_in"))} → ${f1(pr("co2_out"))}`, "Promedio antes → después", COL.co2) +
+    kpi("Reducción de contaminantes", `${f1(prom(CONT.map(rc)))} %`, CONT.map(c => `${NOM[c]} ${f1(rc(c))} %`).join(" · "), "#1d2b2a") +
+    kpi("Tiempo de purificación", `${f1(pr("minutos"))} min`, "Duración promedio del proceso", "#7c3aed") +
+    kpi("Eficiencia promedio", `${f1(pr("eficiencia"))} %`, `${ok.length} procesos purificados`, "#2e8b3d") +
+    kpi("Alertas activas", A.length, `${P.length - ok.length} ingresos pendientes`, "#b91c1c");
+
+  const ult = ok.slice(-10), cats = ult.map(p => "#" + p.id);
+  const ultimo = await api("/api/procesos/" + ok[ok.length - 1].id);
+  const tarjeta = (t, cuerpo) => `<div class="card"><h3>${t}</h3>${cuerpo}</div>`;
+  $("graficos").innerHTML =
+    tarjeta("PM2.5 antes y después (µg/m³)", barras(cats, [
+      {nombre: "Antes", color: "#b45309", valores: ult.map(p => p.pm25_in)},
+      {nombre: "Después", color: "#0f766e", valores: ult.map(p => p.pm25_out)}])) +
+    tarjeta("CO₂ antes y después (ppm)", barras(cats, [
+      {nombre: "Antes", color: "#b45309", valores: ult.map(p => p.co2_in)},
+      {nombre: "Después", color: "#0f766e", valores: ult.map(p => p.co2_out)}])) +
+    tarjeta("% de reducción promedio por contaminante", barras(CONT.map(c => NOM[c]), [
+      {nombre: "% reducción", color: "#0f766e", valores: CONT.map(c => +rc(c).toFixed(1))}], 100)) +
+    tarjeta(`Evolución del último proceso (#${ultimo.id}, ${ultimo.filtro})`, lineas(ultimo.lecturas, ultimo));
+}
+
+/* ---------------- Reportes ---------------- */
+function reportes() {
+  const ok = P.filter(p => p.estado === "Purificado");
+  if (!ok.length) {
+    $("analisis").innerHTML = "<p>Todavía no hay procesos purificados para analizar.</p>";
+    $("tFiltro").innerHTML = ""; $("tRep").innerHTML = "";
+    return;
+  }
+  const pr = k => prom(ok.map(p => p[k]));
+  const rc = c => prom(ok.map(p => p.reduccion[c]));
+  const grupos = {};
+  ok.forEach(p => (grupos[p.filtro] = grupos[p.filtro] || []).push(p));
+  const ranking = Object.entries(grupos).map(([f, a]) => [f, prom(a.map(p => p.eficiencia)), a.length]).sort((a, b) => b[1] - a[1]);
+  const def = ok.filter(p => p.clasificacion === "Deficiente");
+  const aptos = ok.filter(p => p.nivel_out === "Bajo").length;
+  const pend = P.filter(p => p.estado === "Pendiente");
+  let t = `<p>Se registraron <b>${P.length}</b> ingresos de aire; <b>${ok.length}</b> fueron purificados y <b>${pend.length}</b> siguen pendientes.</p>`;
+  t += `<p>El PM2.5 promedio bajó de <b>${f1(pr("pm25_in"))}</b> a <b>${f1(pr("pm25_out"))} µg/m³</b> (${f1(rc("pm25"))} % de reducción) ` +
+       `y el CO₂ pasó de <b>${f1(pr("co2_in"))}</b> a <b>${f1(pr("co2_out"))} ppm</b> (${f1(rc("co2"))} %). ` +
+       `La reducción promedio de PM10 fue ${f1(rc("pm10"))} % y la de CO ${f1(rc("co"))} %.</p>`;
+  t += `<p>El tiempo promedio de purificación fue de <b>${f1(pr("minutos"))} minutos</b> y la eficiencia promedio de <b>${f1(pr("eficiencia"))} %</b>. ` +
+       `${aptos} de ${ok.length} procesos dejaron el aire en nivel Bajo.</p>`;
+  t += `<p>Filtro con mejor desempeño: <b>${ranking[0][0]}</b> (${f1(ranking[0][1])} % de eficiencia en ${ranking[0][2]} procesos).</p>`;
+  t += def.length
+    ? `<p><b>Decisión sugerida:</b> ${def.length} proceso(s) quedaron en resultado Deficiente (${def.map(p => "#" + p.id).join(", ")}). ` +
+      `Suele pasar cuando se usa un filtro de partículas con aire cargado de gases. Si el CO o el CO₂ están elevados, use el Sistema completo.</p>`
+    : `<p><b>Decisión sugerida:</b> no hubo resultados Deficientes. Mantener la selección de filtro según el contaminante dominante.</p>`;
+  if (pend.length) t += `<p><b>Pendiente:</b> tratar los ingresos ${pend.map(p => "#" + p.id).join(", ")}.</p>`;
+  $("analisis").innerHTML = t;
+
+  $("tFiltro").innerHTML = `<thead><tr><th>Filtro</th><th>Procesos</th><th>Eficiencia</th><th>Reducción PM2.5</th><th>Reducción CO₂</th><th>Reducción CO</th><th>Minutos (prom.)</th></tr></thead><tbody>` +
+    ranking.map(([f]) => { const a = grupos[f];
+      return `<tr><td>${f}</td><td>${a.length}</td><td>${f1(prom(a.map(p => p.eficiencia)))} %</td><td>${f1(prom(a.map(p => p.reduccion.pm25)))} %</td>` +
+        `<td>${f1(prom(a.map(p => p.reduccion.co2)))} %</td><td>${f1(prom(a.map(p => p.reduccion.co)))} %</td><td>${f1(prom(a.map(p => p.minutos)))}</td></tr>`; }).join("") + `</tbody>`;
+
+  $("tRep").innerHTML = `<thead><tr><th>#</th><th>Fecha</th><th>Filtro</th><th>Min</th><th>PM2.5</th><th>CO₂</th><th>Reducción prom.</th><th>Eficiencia</th><th>Resultado</th><th>Nivel final</th></tr></thead><tbody>` +
+    [...ok].reverse().map(p => `<tr><td>${p.id}</td><td>${p.fecha_ingreso}</td><td>${p.filtro}</td><td>${p.minutos}</td>` +
+      `<td>${p.pm25_in} → ${p.pm25_out}</td><td>${p.co2_in} → ${p.co2_out}</td><td>${f1(prom(CONT.map(c => p.reduccion[c])))} %</td>` +
+      `<td>${f1(p.eficiencia)} %</td><td>${badge(p.clasificacion, COLOR_RES[p.clasificacion])}</td><td>${nb(p.nivel_out)}</td></tr>`).join("") + `</tbody>`;
+}
+
+/* ---------------- arranque ---------------- */
+async function cargar() {
+  P = await api("/api/procesos");
+  const A = alertas();
+  $("aviso").hidden = !A.length;
+  $("aviso").textContent = `⚠ ${A.length} alerta(s) activa(s) por niveles de contaminación. Haga clic para ver el detalle.`;
+  tablaMediciones();
+  selectores();
+  reportes();
+  await validacion();
+  await dashboard();
+}
+ir("monitoreo");
+cargar();
+</script>
+</body>
+</html>
